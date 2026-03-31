@@ -3,11 +3,12 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --omit=dev --no-audit --no-fund
+RUN npm install --no-audit --no-fund
 
 COPY . .
+RUN npx prisma generate
 
 ENV NODE_ENV=production
 EXPOSE 5040
 
-CMD ["sh", "-c", "npx prisma generate && node server.js"]
+CMD ["node", "server.js"]
