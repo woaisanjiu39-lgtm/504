@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>504 任务管理系统 MVP</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">504 任务管理系统</p>
+          <h1>可用版 MVP · 第二轮迭代</h1>
+        </div>
+        <div class="hint-card" id="aiHint"></div>
+      </header>
+
+      <section class="panel daily-focus-panel">
+        <div class="section-head">
+          <div>
+            <h2>今日推进视图</h2>
+            <p class="section-sub">负责人打开系统先看这块，不再自己从一堆信息里捞重点。</p>
+          </div>
+        </div>
+        <div id="dailyFocus" class="daily-focus-grid"></div>
+      </section>
+
+      <main class="layout">
+        <section class="panel form-panel">
+          <h2>创建任务</h2>
+          <form id="taskForm">
+            <label>
+              任务标题
+              <input name="title" required placeholder="例如：跟进活动场地申请" />
+            </label>
+            <label>
+              任务描述
+              <textarea name="description" rows="4" placeholder="写清楚背景、交付物、注意事项"></textarea>
+            </label>
+            <div class="grid-two">
+              <label>
+                任务类型
+                <select name="taskType">
+                  <option value="拍摄">拍摄</option>
+                  <option value="后期">后期</option>
+                  <option value="宣传">宣传</option>
+                  <option value="场务">场务</option>
+                  <option value="器材">器材</option>
+                  <option value="临时支援">临时支援</option>
+                  <option value="活动筹备">活动筹备</option>
+                  <option value="其他">其他</option>
+                </select>
+              </label>
+              <label>
+                优先级
+                <select name="priority">
+                  <option value="low">低</option>
+                  <option value="medium" selected>中</option>
+                  <option value="high">高</option>
+                </select>
+              </label>
+            </div>
+            <div class="grid-two">
+              <label>
+                Owner（最终负责人）
+                <select name="ownerId" id="ownerSelect">
+                  <option value="">暂不指定</option>
+                </select>
+              </label>
+              <label>
+                Lead（主执行）
+                <select name="assigneeId" id="assigneeSelect">
+                  <option value="">暂不指派</option>
+                </select>
+              </label>
+            </div>
+            <div class="grid-two">
+              <label>
+                Reviewer（验收人）
+                <select name="reviewerId" id="reviewerSelect">
+                  <option value="">暂不指定</option>
+                </select>
+              </label>
+              <label>
+                截止时间
+                <input name="dueDate" type="datetime-local" />
+              </label>
+            </div>
+            <div class="grid-two">
+              <label>
+                创建人
+                <input name="createdBy" placeholder="例如：杰哥" />
+              </label>
+              <label>
+                标签
+                <input name="tags" placeholder="例如：活动,宣传" />
+              </label>
+            </div>
+            <div class="grid-two">
+              <label>
+                预计耗时
+                <input name="estimatedDuration" placeholder="例如：2小时" />
+              </label>
+              <label>
+                所需技能
+                <input name="requiredSkills" placeholder="例如：摄影,场务" />
+              </label>
+            </div>
+            <label>
+              验收标准
+              <textarea name="acceptanceCriteria" rows="2" placeholder="例如：输出一版可直接使用的终稿 / 清单 / 成片"></textarea>
+            </label>
+            <label>
+              下一步动作
+              <input name="nextAction" placeholder="例如：联系负责人确认横幅数量" />
+            </label>
+            <button type="submit">发布任务</button>
+          </form>
+        </section>
+
+        <section class="panel tasks-panel">
+          <div class="section-head">
+            <h2>任务列表</h2>
+            <div class="filters">
+              <input id="searchInput" placeholder="搜索标题 / 描述 / 标签 / 卡点" />
+              <select id="statusFilter">
+                <option value="all">全部状态</option>
+                <option value="todo">待领取</option>
+                <option value="assigned">已指派</option>
+                <option value="in_progress">进行中</option>
+                <option value="pending_review">待验收</option>
+                <option value="done">已完成</option>
+              </select>
+              <select id="memberFilter">
+                <option value="all">全部成员</option>
+              </select>
+            </div>
+          </div>
+          <div id="taskList" class="task-list"></div>
+        </section>
+
+        <section class="panel board-panel">
+          <div class="section-head">
+            <h2>成员看板</h2>
+            <button id="refreshBoardBtn" class="secondary-btn">刷新看板</button>
+          </div>
+          <div id="memberBoard" class="member-board"></div>
+        </section>
+      </main>
+
+      <section class="panel contribution-panel">
+        <div class="section-head">
+          <h2>贡献榜（基础版）</h2>
+          <p class="section-sub">不只看数量，开始把权重、准时率、验收、协助算进去。</p>
+        </div>
+        <div id="contributionBoard" class="contribution-board"></div>
+      </section>
+
+      <section id="executionPage" class="panel execution-page hidden">
+        <div class="section-head">
+          <div>
+            <h2 id="executionTitle">任务执行页</h2>
+            <p id="executionSub" class="section-sub">像负责人真的会看的执行中心。</p>
+          </div>
+          <button id="closeExecutionPageBtn" class="secondary-btn">返回列表</button>
+        </div>
+        <div id="executionContent" class="detail-content execution-content"></div>
+      </section>
+    </div>
+
+    <dialog id="detailDialog" class="detail-dialog">
+      <div class="detail-head">
+        <h3 id="detailTitle">任务详情</h3>
+        <button id="closeDetailBtn" class="secondary-btn">关闭</button>
+      </div>
+      <div id="detailContent" class="detail-content"></div>
+    </dialog>
+
+    <template id="taskCardTemplate">
+      <article class="task-card">
+        <div class="task-main">
+          <div>
+            <div class="task-title-row">
+              <h3 class="task-title"></h3>
+              <span class="status-badge"></span>
+            </div>
+            <p class="task-desc"></p>
+          </div>
+          <div class="meta-row">
+            <span class="assignee"></span>
+            <span class="due-date"></span>
+            <span class="creator"></span>
+            <span class="task-type"></span>
+          </div>
+          <div class="tag-row"></div>
+          <div class="insight-row">
+            <span class="block-reason chip"></span>
+            <span class="next-action chip"></span>
+          </div>
+        </div>
+        <div class="task-actions">
+          <select class="status-select">
+            <option value="todo">待领取</option>
+            <option value="assigned">已指派</option>
+            <option value="in_progress">进行中</option>
+            <option value="pending_review">待验收</option>
+            <option value="done">已完成</option>
+          </select>
+          <select class="block-select">
+            <option value="">无卡点</option>
+            <option value="待素材">待素材</option>
+            <option value="待确认">待确认</option>
+            <option value="待场地">待场地</option>
+            <option value="待设备">待设备</option>
+            <option value="待补人">待补人</option>
+          </select>
+          <input class="progress-input" placeholder="进度说明 / 这一步发生了什么" />
+          <input class="next-action-input" placeholder="下一步动作" />
+          <select class="claim-select"></select>
+          <button class="claim-btn secondary-btn">领取 / 指派</button>
+          <button class="detail-btn secondary-btn">查看详情</button>
+          <button class="save-btn">保存更新</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

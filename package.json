@@ -1,0 +1,27 @@
+{
+  "name": "504-task-system",
+  "version": "1.0.0",
+  "description": "MVP task management system for 504 organization",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:sync-json": "node scripts/sync-json-to-postgres.js",
+    "deploy:check": "node scripts/predeploy-check.js",
+    "deploy:summary": "node scripts/deploy-summary.js",
+    "deploy:railway-env": "node scripts/render-railway-env.js",
+    "deploy:feishu-config": "node scripts/render-feishu-config.js",
+    "deploy:set-public-url": "node scripts/set-public-url.js",
+    "deploy:pack": "node scripts/export-deploy-pack.js",
+    "deploy:verify": "node scripts/postdeploy-verify.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "prisma": "^6.6.0"
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "members": [
+    {
+      "busySlots": [],
+      "scheduleNotes": "",
+      "id": "m1",
+      "name": "杰哥",
+      "role": "统筹"
+    },
+    {
+      "busySlots": [],
+      "scheduleNotes": "",
+      "id": "m2",
+      "name": "阿欣",
+      "role": "宣传"
+    },
+    {
+      "busySlots": [],
+      "scheduleNotes": "",
+      "id": "m3",
+      "name": "阿豪",
+      "role": "执行"
+    },
+    {
+      "busySlots": [],
+      "scheduleNotes": "",
+      "id": "m4",
+      "name": "小林",
+      "role": "设计"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "4e96345e-6942-46cd-9e59-e70a1b6ae912",
+      "title": "504",
+      "description": "",
+      "status": "in_progress",
+      "assigneeId": "m1",
+      "dueDate": "2026-04-03T15:15:00.000Z",
+      "createdAt": "2026-03-19T15:15:45.094Z",
+      "updatedAt": "2026-03-22T17:55:03.784Z",
+      "createdBy": "未填写",
+      "claimedBy": "m1",
+      "tags": [],
+      "reviewDecision": "approved",
+      "reviewerId": "m1",
+      "reviewNote": "结构通过",
+      "deliverableLinks": [
+        "https://example.com/final"
+      ],
+      "updatedBy": "m1",
+      "reviewHistory": [
+        {
+          "id": "d6cba6b2-0096-4d9b-afb1-975cc793f811",
+          "decision": "approved",
+          "reviewerId": "m1",
+          "reviewNote": "结构通过",
+          "deliverableLinks": [
+            "https://example.com/final"
+          ],
+          "createdAt": "2026-03-22T17:42:52.404Z"
+        }
+      ]
+    },
+    {
+      "id": "6c18c866-2dd0-47d5-a2b7-7b178790a0a1",
+      "title": "整理下周活动物料清单",
+      "description": "确认横幅、桌牌、签到表、矿泉水等物料是否齐全。",
+      "status": "todo",
+      "assigneeId": "m3",
+      "dueDate": "2026-03-20T15:11:49.216Z",
+      "createdAt": "2026-03-19T15:11:49.218Z",
+      "updatedAt": "2026-03-19T15:11:49.218Z",
+      "createdBy": "系统示例",
+      "claimedBy": null,
+      "tags": [
+        "活动",
+        "物料"
+      ]
+    },
+    {
+      "id": "937de4b7-57b7-4b9c-812d-13b3eef14d5a",
+      "title": "发布招新推文终稿",
+      "description": "检查标题、封面和报名二维码。",
+      "status": "in_progress",
+      "assigneeId": "m2",
+      "dueDate": "2026-03-21T15:11:49.218Z",
+      "createdAt": "2026-03-19T15:11:49.218Z",
+      "updatedAt": "2026-03-22T17:52:17.431Z",
+      "createdBy": "杰哥",
+      "claimedBy": "m2",
+      "tags": [
+        "宣传"
+      ]
+    }
+  ],
+  "updates": [
+    {
+      "id": "49111444-b7b3-4de5-bddc-45f33a017bdf",
+      "taskId": "4e96345e-6942-46cd-9e59-e70a1b6ae912",
+      "updater": "m1",
+      "status": "in_progress",
+      "note": "已补充验收结论",
+      "blockReason": "",
+      "nextAction": "",
+      "createdAt": "2026-03-22T17:42:52.404Z"
+    }
+  ]
+}

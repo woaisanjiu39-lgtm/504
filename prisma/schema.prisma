@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  todo
+  assigned
+  in_progress
+  pending_review
+  done
+}
+
+enum DutyType {
+  lead
+  support
+  review
+}
+
+enum SourceType {
+  local
+  feishu
+  webhook
+  camera
+  manual
+}
+
+enum ScheduleType {
+  class
+  duty
+  meeting
+  personal
+}
+
+enum ReviewDecision {
+  approved
+  rejected
+  changes_requested
+}
+
+enum EventStatus {
+  pending
+  converted
+  ignored
+}
+
+model User {
+  id              String             @id @default(cuid())
+  name            String
+  displayName     String?
+  sourceType      SourceType         @default(local)
+  sourceUserId    String?
+  feishuOpenId    String?            @unique
+  feishuUserId    String?            @unique
+  feishuUnionId   String?            @unique
+  avatarUrl       String?
+  role            String?
+  bio             String?
+  skillsJson      Json?
+  availability    String?
+  availabilityBand String?
+  availabilityScore Int?
+  currentLoadScore Int?
+  scheduleNotes   String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  schedules       UserSchedule[]
+  ownedTasks      Task[]             @relation("TaskOwner")
+  assignedTasks   Task[]             @relation("TaskLead")
+  reviews         Task[]             @relation("TaskReviewer")
+  taskCollaborations TaskCollaborator[]
+  taskUpdates     TaskUpdate[]
+  deliverables    TaskDeliverable[]
+  taskRecommendations TaskRecommendation[]
+  taskReviewRecords TaskReview[]
+}
+
+model UserSchedule {
+  id          String       @id @default(cuid())
+  userId      String
+  scheduleType ScheduleType
+  weekday     Int
+  startTime   String
+  endTime     String
+  title       String
+  location    String?
+  note        String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id                String               @id @default(cuid())
+  title             String
+  description       String?
+  taskType          String?
+  status            TaskStatus           @default(todo)
+  priority          String?              @default("medium")
+  estimatedDuration String?
+  acceptanceCriteria String?
+  blockReason       String?
+  nextAction        String?
+  needsWho          String?
+  assetNotes        String?
+  sourceType        SourceType           @default(local)
+  sourceId          String?
+  sourceUrl         String?
+  createdBy         String?
+  claimedBy         String?
+  ownerId           String?
+  assigneeId        String?
+  reviewerId        String?
+  dueDate           DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  tagsJson          Json?
+  requiredSkillsJson Json?
+  reviewNote        String?
+  owner             User?                @relation("TaskOwner", fields: [ownerId], references: [id])
+  assignee          User?                @relation("TaskLead", fields: [assigneeId], references: [id])
+  reviewer          User?                @relation("TaskReviewer", fields: [reviewerId], references: [id])
+  collaborators     TaskCollaborator[]
+  updates           TaskUpdate[]
+  deliverables      TaskDeliverable[]
+  reviews           TaskReview[]
+  recommendations   TaskRecommendation[]
+}
+
+model TaskCollaborator {
+  id          String    @id @default(cuid())
+  taskId       String
+  userId       String
+  dutyText     String?
+  dutyType     DutyType @default(support)
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId, dutyType])
+}
+
+model TaskUpdate {
+  id          String    @id @default(cuid())
+  taskId       String
+  actorId      String?
+  updaterLabel String?
+  status       TaskStatus?
+  note         String?
+  blockReason  String?
+  nextAction   String?
+  sourceType   SourceType? @default(local)
+  sourceId     String?
+  sourceUrl    String?
+  metaJson     Json?
+  createdAt    DateTime  @default(now())
+  task         Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actor        User?     @relation(fields: [actorId], references: [id])
+}
+
+model TaskDeliverable {
+  id           String    @id @default(cuid())
+  taskId        String
+  versionLabel  String
+  link          String?
+  note          String?
+  uploadedById  String?
+  uploadedByLabel String?
+  reviewStatus  String?   @default("pending")
+  createdAt     DateTime  @default(now())
+  task          Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy    User?     @relation(fields: [uploadedById], references: [id])
+  reviews       TaskReview[]
+}
+
+model TaskReview {
+  id            String         @id @default(cuid())
+  taskId         String
+  deliverableId  String?
+  reviewerId     String?
+  decision       ReviewDecision
+  note           String?
+  createdAt      DateTime       @default(now())
+  task           Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  deliverable    TaskDeliverable? @relation(fields: [deliverableId], references: [id])
+  reviewer       User?          @relation(fields: [reviewerId], references: [id])
+}
+
+model TaskRecommendation {
+  id           String    @id @default(cuid())
+  taskId        String
+  userId        String
+  score         Int
+  reasonText    String?
+  factorsJson   Json?
+  createdAt     DateTime  @default(now())
+  task          Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SystemEvent {
+  id           String      @id @default(cuid())
+  sourceType   SourceType
+  eventType    String
+  title        String
+  content      String?
+  payloadJson  Json?
+  status       EventStatus @default(pending)
+  createdAt    DateTime    @default(now())
+}
