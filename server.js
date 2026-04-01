@@ -360,6 +360,33 @@ app.post('/api/integrations/feishu/auth/register-or-bind', async (req, res) => {
   });
 });
 
+app.get('/api/integrations/feishu/bootstrap', async (req, res) => {
+  const context = await resolveFeishuMemberContext(req.query || {}, { allowAutoProvision: true });
+  if (!context.ok) return res.status(context.status).json(context.body);
+
+  const card = await taskRepository.getTaskCardDataForMember(context.member.id, {
+    scope: req.query.scope || 'involved',
+    focusLimit: Number(req.query.focusLimit) || 3,
+    recentLimit: Number(req.query.recentLimit) || 5,
+    claimableLimit: Number(req.query.claimableLimit) || 5,
+    priority: req.query.priority || 'all',
+    claimableStatus: req.query.claimableStatus || 'todo'
+  });
+
+  res.json({
+    ok: true,
+    member: context.member,
+    autoProvisioned: context.created,
+    card,
+    identity: {
+      tenantKey: req.query.tenantKey || req.query.tenant_key || '',
+      openId: req.query.openId || req.query.open_id || req.query.feishuOpenId || null,
+      userId: req.query.userId || req.query.user_id || req.query.feishuUserId || null,
+      unionId: req.query.unionId || req.query.union_id || req.query.feishuUnionId || null
+    }
+  });
+});
+
 app.post('/api/integrations/feishu/events', async (req, res) => {
   const body = req.body || {};
 

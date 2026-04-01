@@ -2,7 +2,14 @@ const state = {
   tasks: [],
   members: [],
   board: [],
-  contributionBoard: []
+  contributionBoard: [],
+  feishu: {
+    active: false,
+    member: null,
+    card: null,
+    identity: null,
+    autoProvisioned: false
+  }
 };
 
 const labels = {
@@ -29,6 +36,9 @@ const aiHint = document.getElementById('aiHint');
 const taskTemplate = document.getElementById('taskCardTemplate');
 const refreshBoardBtn = document.getElementById('refreshBoardBtn');
 const dailyFocus = document.getElementById('dailyFocus');
+const feishuEntryPanel = document.getElementById('feishuEntryPanel');
+const feishuEntrySub = document.getElementById('feishuEntrySub');
+const feishuEntryContent = document.getElementById('feishuEntryContent');
 const detailDialog = document.getElementById('detailDialog');
 const detailContent = document.getElementById('detailContent');
 const detailTitle = document.getElementById('detailTitle');
@@ -56,6 +66,135 @@ async function request(url, options = {}) {
 function formatDate(value) {
   if (!value) return '未设置截止时间';
   return new Date(value).toLocaleString('zh-CN', { hour12: false });
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getFeishuIdentityFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const tenantKey = params.get('tenantKey') || params.get('tenant_key') || '';
+  const openId = params.get('openId') || params.get('open_id') || params.get('feishuOpenId') || '';
+  const userId = params.get('userId') || params.get('user_id') || params.get('feishuUserId') || '';
+  const unionId = params.get('unionId') || params.get('union_id') || params.get('feishuUnionId') || '';
+  const name = params.get('name') || params.get('displayName') || params.get('display_name') || '';
+  const avatarUrl = params.get('avatarUrl') || params.get('avatar_url') || '';
+  const hasIdentity = Boolean(tenantKey || openId || userId || unionId);
+
+  return hasIdentity ? { tenantKey, openId, userId, unionId, name, avatarUrl } : null;
+}
+
+async function loadFeishuEntryState() {
+  const identity = getFeishuIdentityFromUrl();
+  if (!identity) {
+    state.feishu = { active: false, member: null, card: null, identity: null, autoProvisioned: false };
+    renderFeishuEntry();
+    return;
+  }
+
+  try {
+    const params = new URLSearchParams();
+    Object.entries(identity).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+
+    const data = await request(`/api/integrations/feishu/bootstrap?${params.toString()}`);
+    state.feishu = {
+      active: true,
+      member: data.member || null,
+      card: data.card || null,
+      identity: data.identity || identity,
+      autoProvisioned: Boolean(data.autoProvisioned)
+    };
+  } catch (error) {
+    state.feishu = {
+      active: true,
+      member: null,
+      card: null,
+      identity,
+      autoProvisioned: false,
+      error: error.message
+    };
+  }
+
+  renderFeishuEntry();
+}
+
+function renderFeishuEntry() {
+  if (!feishuEntryPanel || !feishuEntryContent || !feishuEntrySub) return;
+
+  if (!state.feishu.active) {
+    feishuEntryPanel.hidden = true;
+    feishuEntryContent.innerHTML = '';
+    feishuEntrySub.textContent = '如果飞书身份已带进来，这里会自动开户并切到你的任务视图。';
+    return;
+  }
+
+  feishuEntryPanel.hidden = false;
+  const { member, card, identity, autoProvisioned, error } = state.feishu;
+
+  if (error) {
+    feishuEntrySub.textContent = '已检测到飞书进入，但身份绑定还没完成。';
+    feishuEntryContent.innerHTML = `
+      <div class="alert-box alert-danger">${escapeHtml(error)}</div>
+      <p><strong>当前收到的身份：</strong></p>
+      <pre>${escapeHtml(JSON.stringify(identity || {}, null, 2))}</pre>
+      <p class="section-sub">说明：系统这边已经开始接收飞书身份，但当前页面还没有把完整可用身份送到后端，或者 tenantKey 未对齐。</p>
+    `;
+    return;
+  }
+
+  feishuEntrySub.textContent = autoProvisioned
+    ? '已根据飞书身份自动开户。'
+    : '已识别到飞书身份，可直接进入个人任务视图。';
+
+  const summary = card?.summary || {};
+  const focusTasks = Array.isArray(card?.focusTasks) ? card.focusTasks : [];
+  const claimableTasks = Array.isArray(card?.claimableTasks) ? card.claimableTasks : [];
+
+  feishuEntryContent.innerHTML = `
+    <div class="alert-box alert-ok">
+      当前成员：<strong>${escapeHtml(member?.displayName || member?.name || '未命名成员')}</strong>
+      ${autoProvisioned ? '· 已自动开户' : '· 已绑定飞书身份'}
+    </div>
+    <div class="meta-row">
+      <span>待领取：${summary.todo || 0}</span>
+      <span>已指派：${summary.assigned || 0}</span>
+      <span>进行中：${summary.inProgress || 0}</span>
+      <span>待验收：${summary.pendingReview || 0}</span>
+      <span>已完成：${summary.done || 0}</span>
+    </div>
+    <div>
+      <h3>我现在最该看的任务</h3>
+      ${focusTasks.length ? focusTasks.map((task) => `
+        <div class="timeline-item">
+          <div class="timeline-time">${escapeHtml(task.priority || 'medium')} · ${escapeHtml(task.urgencyLabel || '正常')}</div>
+          <div class="timeline-body">
+            <strong>${escapeHtml(task.title)}</strong>
+            <div>${escapeHtml(task.nextAction || '暂无下一步')}</div>
+          </div>
+        </div>
+      `).join('') : '<div class="empty-state">当前没有聚焦任务</div>'}
+    </div>
+    <div>
+      <h3>可认领任务</h3>
+      ${claimableTasks.length ? claimableTasks.map((task) => `
+        <div class="timeline-item">
+          <div class="timeline-time">${escapeHtml(task.priority || 'medium')} · ${escapeHtml(task.urgencyLabel || '正常')}</div>
+          <div class="timeline-body">
+            <strong>${escapeHtml(task.title)}</strong>
+            <div>${escapeHtml(task.nextAction || '暂无下一步')}</div>
+          </div>
+        </div>
+      `).join('') : '<div class="empty-state">当前没有可认领任务</div>'}
+    </div>
+  `;
 }
 
 function memberName(memberId) {
@@ -773,7 +912,7 @@ function debounce(fn, wait) {
   };
 }
 
-loadData().catch((error) => {
+Promise.all([loadData(), loadFeishuEntryState()]).catch((error) => {
   console.error(error);
   alert(error.message);
 });
