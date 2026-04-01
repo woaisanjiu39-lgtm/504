@@ -20,6 +20,7 @@ body {
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text);
+  overflow-x: auto;
 }
 button, input, textarea, select { font: inherit; }
 button {
@@ -61,7 +62,8 @@ pre {
 
 .platform-shell {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 260px minmax(920px, 1fr);
+  min-width: 1180px;
   min-height: 100vh;
 }
 .sidebar-shell {
@@ -621,13 +623,8 @@ pre {
 
 @media (max-width: 1200px) {
   .platform-shell {
-    grid-template-columns: 1fr;
-  }
-  .sidebar-shell {
-    position: static;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--line);
+    grid-template-columns: 260px minmax(920px, 1fr);
+    min-width: 1180px;
   }
   .content-topbar,
   .overview-strip,
@@ -638,6 +635,20 @@ pre {
 
 @media (max-width: 900px) {
   .content-shell { padding: 16px; }
+  .platform-shell {
+    grid-template-columns: 220px minmax(900px, 1fr);
+    min-width: 1120px;
+  }
+  .sidebar-shell {
+    padding: 16px 10px;
+  }
+  .sidebar-brand {
+    padding: 8px 8px 14px;
+  }
+  .nav-btn {
+    padding: 0.72rem 0.78rem;
+    font-size: 0.92rem;
+  }
   .content-topbar,
   .overview-strip,
   .daily-focus-grid,
@@ -645,23 +656,13 @@ pre {
   .compact-filters,
   .mini-overview,
   .grid-two,
-  .task-card,
   .task-brief-grid,
+  .my-task-focus-grid {
+    grid-template-columns: 1fr 1fr;
+  }
   .task-action-row,
-  .my-task-focus-grid,
   .timeline-item,
   .info-item {
     grid-template-columns: 1fr;
-  }
-  .focus-card-wide {
-    grid-column: auto;
-  }
-  .section-head,
-  .section-head.compact,
-  .task-title-row,
-  .member-top-row,
-  .detail-head {
-    align-items: flex-start;
-    flex-direction: column;
   }
 }
