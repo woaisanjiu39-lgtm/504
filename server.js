@@ -145,6 +145,11 @@ function getFeishuStatus(req) {
   };
 }
 
+function isPrivilegedRole(role = '') {
+  const normalized = String(role || '').trim().toLowerCase();
+  return ['admin', 'owner', 'manager', 'leader'].includes(normalized);
+}
+
 async function resolveFeishuMemberContext(payload = {}, options = {}) {
   const tenantKey = payload.tenantKey || payload.tenant_key || '';
   const openId = payload.openId || payload.open_id || payload.feishuOpenId || null;
@@ -258,6 +263,7 @@ function buildTaskDraftFromFeishuEvent(payload = {}, actor = null, baseUrl = APP
     requiredSkills: []
   };
 }
+
 
 async function recordFeishuEvent(payload = {}) {
   const prisma = getPrisma();
@@ -547,10 +553,39 @@ app.post('/api/integrations/feishu/tasks/:id/claim', async (req, res) => {
   const context = await resolveFeishuMemberContext(payload, { allowAutoProvision: true });
   if (!context.ok) return res.status(context.status).json(context.body);
 
-  const task = await taskRepository.claimTask(req.params.id, context.member.id);
+  const targetMemberId = payload.memberId || payload.targetMemberId || context.member.id;
+  const privileged = isPrivilegedRole(context.member.role);
+  if (!privileged && targetMemberId !== context.member.id) {
+    return res.status(403).json({ error: '普通成员只能领取给自己，不能指派给别人', permission: 'claim-self-only' });
+  }
+
+  const task = await taskRepository.claimTask(req.params.id, targetMemberId);
   if (!task) return res.status(404).json({ error: '任务不存在' });
 
-  res.json({ ok: true, member: context.member, autoProvisioned: context.created, task });
+  res.json({ ok: true, member: context.member, autoProvisioned: context.created, privileged, targetMemberId, task });
+});
+
+app.post('/api/tasks/draft', async (req, res) => {
+  const text = req.body?.text || req.body?.input || '';
+  if (!String(text || '').trim()) {
+    return res.status(400).json({ error: 'text 必填' });
+  }
+
+  const members = await taskRepository.readMembers();
+  const board = await taskRepository.getBoard();
+  const draft = aiService.buildTaskDraft(text, { members, board });
+  if (!draft) return res.status(400).json({ error: '无法生成任务草稿' });
+
+  res.json({
+    ok: true,
+    mode: 'server-draft-v2',
+    draft,
+    meta: {
+      aiLayer: 'hybrid-planner',
+      hasSubtasks: Array.isArray(draft.subtasks) && draft.subtasks.length > 0,
+      riskLevel: draft.risk?.level || 'ok'
+    }
+  });
 });
 
 app.get('/api/tasks/:id', async (req, res) => {

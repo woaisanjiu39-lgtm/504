@@ -3,180 +3,368 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>504 任务管理系统 MVP</title>
+    <title>504 任务管理系统</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">504 任务管理系统</p>
-          <h1>可用版 MVP · 第二轮迭代</h1>
-        </div>
-        <div class="hint-card" id="aiHint"></div>
-      </header>
-
-      <section class="panel" id="feishuEntryPanel" hidden>
-        <div class="section-head">
+    <div class="platform-shell">
+      <aside class="sidebar-shell">
+        <div class="sidebar-brand">
+          <div class="brand-mark">504</div>
           <div>
-            <h2>飞书进入状态</h2>
-            <p class="section-sub" id="feishuEntrySub">如果飞书身份已带进来，这里会自动开户并切到你的任务视图。</p>
+            <strong>504任务管理系统</strong>
+            <p>任务协作后台</p>
           </div>
         </div>
-        <div id="feishuEntryContent" class="detail-content"></div>
-      </section>
 
-      <section class="panel daily-focus-panel">
-        <div class="section-head">
-          <div>
-            <h2>今日推进视图</h2>
-            <p class="section-sub">负责人打开系统先看这块，不再自己从一堆信息里捞重点。</p>
-          </div>
+        <div class="sidebar-group">
+          <p class="sidebar-group-title">总览</p>
+          <button class="nav-btn active" data-page="overviewPage">首页概览</button>
+          <button class="nav-btn" data-page="feishuPage">飞书接入</button>
         </div>
-        <div id="dailyFocus" class="daily-focus-grid"></div>
-      </section>
 
-      <main class="layout">
-        <section class="panel form-panel">
-          <h2>创建任务</h2>
-          <form id="taskForm">
-            <label>
-              任务标题
-              <input name="title" required placeholder="例如：跟进活动场地申请" />
-            </label>
-            <label>
-              任务描述
-              <textarea name="description" rows="4" placeholder="写清楚背景、交付物、注意事项"></textarea>
-            </label>
-            <div class="grid-two">
-              <label>
-                任务类型
-                <select name="taskType">
-                  <option value="拍摄">拍摄</option>
-                  <option value="后期">后期</option>
-                  <option value="宣传">宣传</option>
-                  <option value="场务">场务</option>
-                  <option value="器材">器材</option>
-                  <option value="临时支援">临时支援</option>
-                  <option value="活动筹备">活动筹备</option>
-                  <option value="其他">其他</option>
-                </select>
-              </label>
-              <label>
-                优先级
-                <select name="priority">
-                  <option value="low">低</option>
-                  <option value="medium" selected>中</option>
-                  <option value="high">高</option>
-                </select>
-              </label>
+        <div class="sidebar-group">
+          <p class="sidebar-group-title">任务管理</p>
+          <button class="nav-btn" data-page="myTasksPage">我的任务</button>
+          <button class="nav-btn" data-page="tasksPage">任务中心</button>
+          <button class="nav-btn" data-page="archivePage">已完成 / 归档</button>
+          <button class="nav-btn" data-page="createPage">创建任务</button>
+          <button class="nav-btn" data-page="executionPage">任务执行页</button>
+        </div>
+
+        <div class="sidebar-group">
+          <p class="sidebar-group-title">组织协作</p>
+          <button class="nav-btn" data-page="membersPage">成员看板</button>
+          <button class="nav-btn" data-page="contributionPage">贡献榜</button>
+        </div>
+      </aside>
+
+      <main class="content-shell">
+        <header class="content-topbar">
+          <div>
+            <p class="eyebrow">504 TASK OPS</p>
+            <h1 id="pageTitle">首页概览</h1>
+            <p class="section-sub" id="pageDescription">先看全局状态，再决定今天先推进什么。</p>
+          </div>
+          <div class="hint-card" id="aiHint"></div>
+        </header>
+
+        <section class="page-view active" id="overviewPage">
+          <section class="overview-strip">
+            <article class="overview-card emphasis">
+              <span class="overview-label">任务总数</span>
+              <strong id="statTotalTasks">0</strong>
+              <p>当前系统里所有任务</p>
+            </article>
+            <article class="overview-card">
+              <span class="overview-label">待推进</span>
+              <strong id="statActiveTasks">0</strong>
+              <p>包含待领取 / 已指派 / 进行中 / 待验收</p>
+            </article>
+            <article class="overview-card">
+              <span class="overview-label">24h 紧急</span>
+              <strong id="statUrgentTasks">0</strong>
+              <p>今天最容易翻车的任务</p>
+            </article>
+            <article class="overview-card">
+              <span class="overview-label">待领取</span>
+              <strong id="statTodoTasks">0</strong>
+              <p>适合马上分发或认领</p>
+            </article>
+          </section>
+
+          <section class="panel daily-focus-panel">
+            <div class="section-head compact">
+              <div>
+                <h2>今日推进视图</h2>
+                <p class="section-sub">负责人先看重点，不再自己从一堆信息里捞重点。</p>
+              </div>
             </div>
-            <div class="grid-two">
-              <label>
-                Owner（最终负责人）
-                <select name="ownerId" id="ownerSelect">
-                  <option value="">暂不指定</option>
-                </select>
-              </label>
-              <label>
-                Lead（主执行）
-                <select name="assigneeId" id="assigneeSelect">
-                  <option value="">暂不指派</option>
-                </select>
-              </label>
-            </div>
-            <div class="grid-two">
-              <label>
-                Reviewer（验收人）
-                <select name="reviewerId" id="reviewerSelect">
-                  <option value="">暂不指定</option>
-                </select>
-              </label>
-              <label>
-                截止时间
-                <input name="dueDate" type="datetime-local" />
-              </label>
-            </div>
-            <div class="grid-two">
-              <label>
-                创建人
-                <input name="createdBy" placeholder="例如：杰哥" />
-              </label>
-              <label>
-                标签
-                <input name="tags" placeholder="例如：活动,宣传" />
-              </label>
-            </div>
-            <div class="grid-two">
-              <label>
-                预计耗时
-                <input name="estimatedDuration" placeholder="例如：2小时" />
-              </label>
-              <label>
-                所需技能
-                <input name="requiredSkills" placeholder="例如：摄影,场务" />
-              </label>
-            </div>
-            <label>
-              验收标准
-              <textarea name="acceptanceCriteria" rows="2" placeholder="例如：输出一版可直接使用的终稿 / 清单 / 成片"></textarea>
-            </label>
-            <label>
-              下一步动作
-              <input name="nextAction" placeholder="例如：联系负责人确认横幅数量" />
-            </label>
-            <button type="submit">发布任务</button>
-          </form>
+            <div id="dailyFocus" class="daily-focus-grid"></div>
+          </section>
         </section>
 
-        <section class="panel tasks-panel">
-          <div class="section-head">
-            <h2>任务列表</h2>
-            <div class="filters">
-              <input id="searchInput" placeholder="搜索标题 / 描述 / 标签 / 卡点" />
-              <select id="statusFilter">
-                <option value="all">全部状态</option>
-                <option value="todo">待领取</option>
-                <option value="assigned">已指派</option>
-                <option value="in_progress">进行中</option>
-                <option value="pending_review">待验收</option>
-                <option value="done">已完成</option>
-              </select>
-              <select id="memberFilter">
-                <option value="all">全部成员</option>
-              </select>
+        <section class="page-view" id="feishuPage">
+          <section class="panel feishu-panel" id="feishuEntryPanel" hidden>
+            <div class="section-head compact">
+              <div>
+                <h2>飞书进入状态</h2>
+                <p class="section-sub" id="feishuEntrySub">如果飞书身份已带进来，这里会自动开户并切到你的任务视图。</p>
+              </div>
             </div>
-          </div>
-          <div id="taskList" class="task-list"></div>
+            <div id="feishuEntryContent" class="detail-content"></div>
+          </section>
+
+          <section class="panel static-panel">
+            <div class="section-head compact">
+              <div>
+                <h2>飞书接入说明</h2>
+                <p class="section-sub">这里单独放飞书，不和任务中心混在一起。</p>
+              </div>
+            </div>
+            <div class="info-list">
+              <div class="info-item"><strong>当前用途</strong><span>自动开户、我的任务、认领任务、联调状态</span></div>
+              <div class="info-item"><strong>后续目标</strong><span>让飞书成员进入后直接识别身份并进入个人任务视图</span></div>
+              <div class="info-item"><strong>现在原则</strong><span>先把链路打通，再做细审美</span></div>
+            </div>
+          </section>
         </section>
 
-        <section class="panel board-panel">
-          <div class="section-head">
-            <h2>成员看板</h2>
-            <button id="refreshBoardBtn" class="secondary-btn">刷新看板</button>
+        <section class="page-view" id="myTasksPage">
+          <section class="panel">
+            <div class="section-head">
+              <div>
+                <h2>我的任务</h2>
+                <p class="section-sub">先看某个成员当下要处理什么，再看全局后台。</p>
+              </div>
+              <div class="filters compact-filters">
+                <select id="myTaskMemberSelect">
+                  <option value="">选择成员</option>
+                </select>
+                <select id="myTaskScopeSelect">
+                  <option value="assigned">我负责的</option>
+                  <option value="involved">我参与的</option>
+                  <option value="owned">我作为Owner的</option>
+                </select>
+              </div>
+            </div>
+            <div id="myTaskSummary" class="overview-strip mini-overview"></div>
+            <div id="myTaskHero" class="my-task-hero"></div>
+            <div id="myTaskFocus" class="my-task-focus-grid"></div>
+            <div id="myTaskList" class="task-list"></div>
+          </section>
+        </section>
+
+        <section class="page-view" id="tasksPage">
+          <section class="panel tasks-panel">
+            <div class="section-head">
+              <div>
+                <h2>任务中心</h2>
+                <p class="section-sub">按状态筛、按成员筛、按关键词搜，核心推进都从这里进。</p>
+              </div>
+              <div class="filters">
+                <input id="searchInput" placeholder="搜索标题 / 描述 / 标签 / 卡点" />
+                <select id="statusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="todo">待领取</option>
+                  <option value="assigned">已指派</option>
+                  <option value="in_progress">进行中</option>
+                  <option value="pending_review">待验收</option>
+                  <option value="done">已完成</option>
+                </select>
+                <select id="memberFilter">
+                  <option value="all">全部成员</option>
+                </select>
+              </div>
+            </div>
+            <div class="status-tabs" id="taskStatusTabs">
+              <button class="status-tab active" data-status="all">全部</button>
+              <button class="status-tab" data-status="todo">待领取</button>
+              <button class="status-tab" data-status="assigned">已指派</button>
+              <button class="status-tab" data-status="in_progress">进行中</button>
+              <button class="status-tab" data-status="pending_review">待验收</button>
+              <button class="status-tab" data-status="done">已完成</button>
+            </div>
+            <div id="taskList" class="task-list"></div>
+          </section>
+        </section>
+
+        <section class="page-view" id="archivePage">
+          <section class="panel">
+            <div class="section-head">
+              <div>
+                <h2>已完成 / 归档</h2>
+                <p class="section-sub">把已经做完的任务单独放一页，回顾和找历史更顺手。</p>
+              </div>
+              <div class="filters compact-filters archive-filters">
+                <input id="archiveSearchInput" placeholder="搜标题 / 标签 / 创建人" />
+                <select id="archiveTimeFilter">
+                  <option value="all">全部时间</option>
+                  <option value="7d">最近 7 天</option>
+                  <option value="30d">最近 30 天</option>
+                  <option value="90d">最近 90 天</option>
+                </select>
+              </div>
+            </div>
+            <div id="archiveSummary" class="archive-summary"></div>
+            <div id="archiveTaskList" class="task-list"></div>
+          </section>
+        </section>
+
+        <section class="page-view" id="createPage">
+          <section class="panel form-panel">
+            <div class="section-head compact">
+              <div>
+                <h2>创建任务</h2>
+                <p class="section-sub">先把任务描述清楚，后面协作才不乱。</p>
+              </div>
+            </div>
+            <section class="smart-create-panel">
+              <div class="section-head compact">
+                <div>
+                  <h3>一句话发任务</h3>
+                  <p class="section-sub">直接用口语说，系统先帮你拆标题、类型、优先级、截止时间和下一步。</p>
+                </div>
+              </div>
+              <div class="smart-create-box">
+                <textarea id="smartTaskInput" rows="4" placeholder="例如：明天下午六点前把毕业宣传片海报初版做出来，给阿欣验收，优先级高，先确认尺寸和文案"></textarea>
+                <div class="smart-create-actions">
+                  <div class="smart-create-button-group">
+                    <button type="button" id="smartTaskParseBtn">自动生成任务草稿</button>
+                    <button type="button" id="smartTaskPublishBtn" class="secondary-btn">一键发布草稿</button>
+                  </div>
+                  <span id="smartTaskHint" class="section-sub">先说人话，下面表单我替你自动填。</span>
+                </div>
+                <div id="smartTaskPreview" class="smart-task-preview"></div>
+                <div id="smartTaskMetaBar" class="smart-meta-bar"></div>
+                <details class="smart-json-panel">
+                  <summary>查看结构化理解结果</summary>
+                  <pre id="smartTaskJsonPreview">{}</pre>
+                </details>
+              </div>
+            </section>
+            <div class="template-row" id="taskTemplatePresets">
+              <button type="button" class="secondary-btn template-btn" data-template="shoot">拍摄任务</button>
+              <button type="button" class="secondary-btn template-btn" data-template="promo">宣传任务</button>
+              <button type="button" class="secondary-btn template-btn" data-template="support">临时支援</button>
+            </div>
+            <form id="taskForm">
+              <label>
+                任务标题
+                <input name="title" required placeholder="例如：跟进活动场地申请" />
+              </label>
+              <label>
+                任务描述
+                <textarea name="description" rows="4" placeholder="写清楚背景、交付物、注意事项"></textarea>
+              </label>
+              <div class="grid-two">
+                <label>
+                  任务类型
+                  <select name="taskType">
+                    <option value="拍摄">拍摄</option>
+                    <option value="后期">后期</option>
+                    <option value="宣传">宣传</option>
+                    <option value="场务">场务</option>
+                    <option value="器材">器材</option>
+                    <option value="临时支援">临时支援</option>
+                    <option value="活动筹备">活动筹备</option>
+                    <option value="其他">其他</option>
+                  </select>
+                </label>
+                <label>
+                  优先级
+                  <select name="priority">
+                    <option value="low">低</option>
+                    <option value="medium" selected>中</option>
+                    <option value="high">高</option>
+                  </select>
+                </label>
+              </div>
+              <div class="grid-two">
+                <label>
+                  Owner（最终负责人）
+                  <select name="ownerId" id="ownerSelect">
+                    <option value="">暂不指定</option>
+                  </select>
+                </label>
+                <label>
+                  Lead（主执行）
+                  <select name="assigneeId" id="assigneeSelect">
+                    <option value="">暂不指派</option>
+                  </select>
+                </label>
+              </div>
+              <div class="grid-two">
+                <label>
+                  Reviewer（验收人）
+                  <select name="reviewerId" id="reviewerSelect">
+                    <option value="">暂不指定</option>
+                  </select>
+                </label>
+                <label>
+                  截止时间
+                  <input name="dueDate" type="datetime-local" />
+                </label>
+              </div>
+              <div class="grid-two">
+                <label>
+                  创建人
+                  <input name="createdBy" placeholder="例如：杰哥" />
+                </label>
+                <label>
+                  标签
+                  <input name="tags" placeholder="例如：活动,宣传" />
+                </label>
+              </div>
+              <div class="grid-two">
+                <label>
+                  预计耗时
+                  <input name="estimatedDuration" placeholder="例如：2小时" />
+                </label>
+                <label>
+                  所需技能
+                  <input name="requiredSkills" placeholder="例如：摄影,场务" />
+                </label>
+              </div>
+              <label>
+                验收标准
+                <textarea name="acceptanceCriteria" rows="2" placeholder="例如：输出一版可直接使用的终稿 / 清单 / 成片"></textarea>
+              </label>
+              <label>
+                下一步动作
+                <input name="nextAction" placeholder="例如：联系负责人确认横幅数量" />
+              </label>
+              <button type="submit">发布任务</button>
+            </form>
+          </section>
+        </section>
+
+        <section class="page-view" id="membersPage">
+          <section class="panel board-panel">
+            <div class="section-head compact">
+              <div>
+                <h2>成员看板</h2>
+                <p class="section-sub">谁忙、谁空、谁适合接活，一眼先看这里。</p>
+              </div>
+              <button id="refreshBoardBtn" class="secondary-btn">刷新</button>
+            </div>
+            <div id="memberBoard" class="member-board"></div>
+          </section>
+        </section>
+
+        <dialog id="memberDialog" class="detail-dialog">
+          <div class="detail-head">
+            <h3 id="memberDialogTitle">成员详情</h3>
+            <button id="closeMemberDialogBtn" class="secondary-btn">关闭</button>
           </div>
-          <div id="memberBoard" class="member-board"></div>
+          <div id="memberDialogContent" class="detail-content"></div>
+        </dialog>
+
+        <section class="page-view" id="contributionPage">
+          <section class="panel contribution-panel">
+            <div class="section-head compact">
+              <div>
+                <h2>贡献榜</h2>
+                <p class="section-sub">不只看数量，也看权重、准时率、验收与协助。</p>
+              </div>
+            </div>
+            <div id="contributionBoard" class="contribution-board"></div>
+          </section>
+        </section>
+
+        <section id="executionPage" class="page-view">
+          <section class="panel execution-page hidden">
+            <div class="section-head">
+              <div>
+                <h2 id="executionTitle">任务执行页</h2>
+                <p id="executionSub" class="section-sub">像负责人真的会看的执行中心。</p>
+              </div>
+              <button id="closeExecutionPageBtn" class="secondary-btn">返回任务中心</button>
+            </div>
+            <div id="executionContent" class="detail-content execution-content"></div>
+          </section>
         </section>
       </main>
-
-      <section class="panel contribution-panel">
-        <div class="section-head">
-          <h2>贡献榜（基础版）</h2>
-          <p class="section-sub">不只看数量，开始把权重、准时率、验收、协助算进去。</p>
-        </div>
-        <div id="contributionBoard" class="contribution-board"></div>
-      </section>
-
-      <section id="executionPage" class="panel execution-page hidden">
-        <div class="section-head">
-          <div>
-            <h2 id="executionTitle">任务执行页</h2>
-            <p id="executionSub" class="section-sub">像负责人真的会看的执行中心。</p>
-          </div>
-          <button id="closeExecutionPageBtn" class="secondary-btn">返回列表</button>
-        </div>
-        <div id="executionContent" class="detail-content execution-content"></div>
-      </section>
     </div>
 
     <dialog id="detailDialog" class="detail-dialog">
@@ -197,16 +385,25 @@
             </div>
             <p class="task-desc"></p>
           </div>
-          <div class="meta-row">
-            <span class="assignee"></span>
+          <div class="meta-row compact-meta-row">
+            <span class="task-owner-chip"></span>
             <span class="due-date"></span>
-            <span class="creator"></span>
             <span class="task-type"></span>
           </div>
+          <div class="task-brief-grid">
+            <div class="brief-item">
+              <span class="brief-label">负责人</span>
+              <strong class="assignee"></strong>
+            </div>
+            <div class="brief-item">
+              <span class="brief-label">下一步</span>
+              <strong class="next-action-brief"></strong>
+            </div>
+          </div>
           <div class="tag-row"></div>
-          <div class="insight-row">
+          <div class="insight-row compact-insight-row">
             <span class="block-reason chip"></span>
-            <span class="next-action chip"></span>
+            <span class="creator"></span>
           </div>
         </div>
         <div class="task-actions">
@@ -229,7 +426,10 @@
           <input class="next-action-input" placeholder="下一步动作" />
           <select class="claim-select"></select>
           <button class="claim-btn secondary-btn">领取 / 指派</button>
-          <button class="detail-btn secondary-btn">查看详情</button>
+          <div class="task-action-row">
+            <button class="detail-btn secondary-btn">查看详情</button>
+            <button class="execution-btn secondary-btn">进入执行页</button>
+          </div>
           <button class="save-btn">保存更新</button>
         </div>
       </article>
